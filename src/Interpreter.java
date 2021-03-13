@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Interpreter {
 	
 	public Interpreter() {
@@ -38,6 +40,82 @@ public class Interpreter {
 				default: return "";
 			}
 		}
+	}
+	
+	private ArrayList<String> separate(String code, int word_length) {
+		//Se quita la palabra de la funcion del string, para retornar solo parametros
+		code = code.substring(word_length, code.length());
+		
+		int count1 = 0, count2 = 0;
+		Integer[] range = new Integer[2];
+		ArrayList<Integer[]> ranges = new ArrayList<>();
+		
+		//Se encuentran los rangos de posiciones donde estan los parametros en el string
+		for(int i = 0; i < code.length(); i++) {
+			if(count1 == count2) {
+				if(code.charAt(i) == '(') {
+					if(i != 0) {
+						if(code.charAt(i-1) != '\'') {
+							range[0] = i;
+						}
+					} else {
+						range[0] = i;
+					}
+					count1++;
+				} else if(code.charAt(i) == '\'') {
+					range[0] = i;
+				} else if(code.charAt(i) != ' ') { 
+					if(i == code.length()-1) {
+						if(code.charAt(i-1) != ')' && code.charAt(i-1) != ' ') {
+							range[1] = i;
+							ranges.add(range);
+							range = new Integer[2];
+						} else {
+							range[0] = i;
+							range[1] = i;
+							ranges.add(range);
+							range = new Integer[2];
+						}
+					} else if(i == 0) {
+						range[0] = i;
+						if(code.charAt(i+1) == '(' || code.charAt(i+1) == ' ') {
+							range[1] = i;
+							ranges.add(range);
+							range = new Integer[2];
+						}
+					} else {
+						if(code.charAt(i-1) == ')' || code.charAt(i-1) == ' ') {
+							range[0] = i;
+						}	
+						if(code.charAt(i+1) == '(' || code.charAt(i+1) == ' '){
+							range[1] = i;
+							ranges.add(range);
+							range = new Integer[2];
+						}
+					}
+				}
+			} else if(code.charAt(i) == '(') {
+				count1++;
+			} else if(code.charAt(i) == ')') {
+				count2++;
+				if(count1 == count2) {
+					range[1] = i;
+					ranges.add(range);
+					range = new Integer[2];
+				}
+			}
+		}
+		
+		//Se genera un ArrayList para los parametros de la funcion
+		ArrayList<String> parameters = new ArrayList<>();
+		String parameter;
+		for(Integer[] pair : ranges) {
+			//Se utiliza los rangos de posiciones encontrados anteriormente
+			parameter = code.substring(pair[0], pair[1]+1);
+			parameters.add(parameter);
+		}
+		
+		return parameters;
 	}
 	
 	//input: add 45 (* 4 5)     setq variable 34.5
