@@ -157,16 +157,50 @@ public class Interpreter {
 		return "";
 	}
 	
-	private String equal(String code) {
-		return "";
+	public String equal(String code) {
+		int word_length = 5;
+		if(code.charAt(0) == '=') {
+			word_length = 1;
+		}
+		ArrayList<String> parameters = separate(code, word_length);
+		for(String parameter : parameters) {
+			if(parameter.charAt(0) == '(') {
+				parameter = translate(parameter);
+			}
+		}
+		String java_syntax = "(" + parameters.get(0) + " == " + parameters.get(1) + ")";
+		for(int i=2; i<parameters.size(); i++) {
+			java_syntax += " && (" + parameters.get(0) + " == " + parameters.get(i) + ")";
+		}
+		return java_syntax;
 	}
 	
-	private String greater(String code) {
-		return "";
+	public String greater(String code) {
+		ArrayList<String> parameters = separate(code, 1);
+		for(String parameter : parameters) {
+			if(parameter.charAt(0) == '(') {
+				parameter = translate(parameter);
+			}
+		}
+		String java_syntax = "(" + parameters.get(0) + " > " + parameters.get(1) + ")";
+		for(int i=2; i<parameters.size(); i++) {
+			java_syntax += " && (" + parameters.get(0) + " > " + parameters.get(i) + ")";
+		}
+		return java_syntax;
 	}
 	
-	private String less(String code) {
-		return "";
+	public String less(String code) {
+		ArrayList<String> parameters = separate(code, 1);
+		for(String parameter : parameters) {
+			if(parameter.charAt(0) == '(') {
+				parameter = translate(parameter);
+			}
+		}
+		String java_syntax = "(" + parameters.get(0) + " < " + parameters.get(1) + ")";
+		for(int i=2; i<parameters.size(); i++) {
+			java_syntax += " && (" + parameters.get(0) + " < " + parameters.get(i) + ")";
+		}
+		return java_syntax;
 	}
 	
 	private String cond(String code) {
