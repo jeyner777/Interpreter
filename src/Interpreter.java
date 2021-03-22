@@ -42,7 +42,7 @@ public class Interpreter {
 		}
 	}
 	
-	private ArrayList<String> separate(String code, int word_length) {
+	public ArrayList<String> separate(String code, int word_length) {
 		//Se quita la palabra de la funcion del string, para retornar solo parametros
 		code = code.substring(word_length, code.length());
 		
