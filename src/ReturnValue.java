@@ -3,6 +3,12 @@ public class ReturnValue {
 	private Double dbl;
 	private Boolean bool;
 	
+	ReturnValue() {
+		str = null;
+		dbl = null;
+		bool = null;
+	}
+	
 	ReturnValue(String str) {
 		this.str = str;
 		dbl = null;
@@ -21,15 +27,15 @@ public class ReturnValue {
 		this.bool = bool;
 	}
 
-	public String getStr() {
+	public String getString() {
 		return str;
 	}
 
-	public Double getDbl() {
+	public Double getDouble() {
 		return dbl;
 	}
 	
-	public Boolean getBool() {
+	public Boolean getBoolean() {
 		return bool;
 	}
 	
@@ -38,8 +44,10 @@ public class ReturnValue {
 			return str;
 		} else if (dbl != null) {
 			return dbl.toString();
-		} else {
+		} else if (bool != null){
 			return bool.toString();
+		} else {
+			return " ";
 		}
 	}
 }
