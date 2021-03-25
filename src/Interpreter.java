@@ -1,15 +1,33 @@
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 public class Interpreter {
 	
 	private ArrayList<String> conds;
 	private ArrayList<String> variables;
-	private ArrayList<String> functions;
+	private Hashtable<String, Boolean> functions;
 	
 	public Interpreter() {
 		conds = new ArrayList<String>(); //Se guardan los nombres de las funciones cond.
 		variables = new ArrayList<String>(); //Se guardan los nombres de las variables.
-		functions = new ArrayList<String>(); //Se guardan los nombres de las funciones definidas por el usuario.
+		functions = new Hashtable<>(); //Se guardan los nombres de las funciones definidas, y si tienen retorno o no.
+		//Los valores booleanos se trabajan como variables.
+		variables.add("t");
+		variables.add("T");
+		variables.add("NIL");
+		variables.add("NIl");
+		variables.add("NiL");
+		variables.add("nIL");
+		variables.add("nIl");
+		variables.add("niL");
+		variables.add("nil");
+	}
+	
+	public Interpreter(Hashtable<String, Boolean> functions, String function_name) {
+		conds = new ArrayList<String>(); //Se guardan los nombres de las funciones cond.
+		variables = new ArrayList<String>(); //Se guardan los nombres de las variables.
+		this.functions = functions; //Se guardan los nombres de las funciones definidas, y si tienen retorno o no.
+		functions.put(function_name, true);
 		//Los valores booleanos se trabajan como variables.
 		variables.add("t");
 		variables.add("T");
@@ -43,7 +61,7 @@ public class Interpreter {
 			} else if (code.charAt(0) == '('){
 				code = code.substring(1, code.length()-1);
 				String operator = code.split(" ")[0].split("\\(")[0].toLowerCase();
-				if (functions.contains(operator)) {
+				if (functions.containsKey(operator)) {
 					return function(code);
 				} else {
 					switch(operator) {
@@ -344,7 +362,59 @@ public class Interpreter {
 		return "cond" + conds.size() + "()";
 	}
 	
-	private boolean isReturn(String code) {
+	/**
+	 * Verifica si hay retorno en una funcion o en una condicional
+	 * @param code: String
+	 * @param function_name: String
+	 * @return
+	 */
+	public boolean isReturn(String code, String...function_name) {
+		String operator, last_action;
+		//Se verifica si es cond, ya que estas pueden tener retorno o no.
+		if(code.substring(0, 4).equals("cond")) {
+			ArrayList<String> parameters = separate(code, 4), test_action;
+			System.out.println(parameters);
+			for(String parameter : parameters) {
+				parameter = parameter.substring(1, parameter.length()-1);
+				test_action = separate(parameter, 0);
+				last_action = test_action.get(test_action.size()-1);
+				//Se evalua el caso en que el cond tenga la misma funcion de donde fue llamada como ultima accion.
+				if(last_action.charAt(0) == '(') {
+					last_action = last_action.substring(1, last_action.length()-1);
+					operator = last_action.split(" ")[0].split("\\(")[0].toLowerCase();
+					System.out.println(operator);
+					if(function_name.length > 0) {
+						if(!operator.equals(function_name[0]) && isReturn(last_action, function_name[0])) {
+							return true;
+						}
+					} else if(isReturn(last_action)) {
+						System.out.println(last_action);
+						return true;
+					}
+				} else {
+					return true;
+				}
+			}
+			return false;
+		}
+	
+		operator = code.split(" ")[0].split("\\(")[0].toLowerCase();
+		System.out.println(operator);
+		//Se verifica si es uno de los tres metodos que nunca tienen retorno.
+		if(operator.equals("setq") || operator.equals("write") || operator.equals("write-line")) {
+			return false;
+		//Si es una funcion definida por el usuaurio, se verifica si esta tiene retorno.
+		} else if (function_name.length > 0) {
+			if (operator.equals(function_name[0])) {
+				return false;
+			} else if (functions.containsKey(operator)){
+				return functions.get(operator);
+			}
+		} else if(functions.containsKey(operator)) {
+			return functions.get(operator);
+		}
+	
+		//Si no es ningun de las posibles funciones sin retorno
 		return true;
 	}
 }
