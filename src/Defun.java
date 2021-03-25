@@ -6,16 +6,24 @@ public class Defun {
 		
 		System.out.println("Prueba");
 	
+		// script de main
 		String code = "defun FaCT (n a b c &key f g &optional h) " +
 				"(if (<= n 0)" + 
 				"1" + 
 				"(* n (fact (1- n))))";
 		Interpreter reader = new Interpreter();
-		String tabString = "\t"; // Indentation Style
 		ArrayList<String> parts = reader.separate(code, 5);
 		System.out.println(parts); // borrar
 		
+		// 1  a 9
+		// llamar a translate si cond, setq write
+		// 10
+		// averiguar y si SI es Return --> translate y cambiar que NO void sino RValue
+		// luego retornar "return ReturnValue(interpreter interno .translate(linea_de_codigo))
+		// si NO es return solo translate
+		
 		// Start of the function
+		String tabString = "\t"; // Indentation Style
 		String function = "\n\n" + tabString + "public static ReturnValue "+ parts.get(0).toLowerCase() + "(";
 		parts.remove(0); // removes the name of the function from the ArrayList
 		tabString += "\t";
@@ -39,7 +47,7 @@ public class Defun {
 				"=", "/=", ">", "<", ">=", "<=", "max", "min", "equal", "greater", "less", // Comparison Operations
 				"and", "or", "not", "xor", //Logical Operations on Boolean Values
 				"setq", "atom", "list", "setf", "cond")); // S-Expressions
-		for(String i: parts) {
+		for(String i: parts) { // cambiar a normal loop
 			ArrayList<String> instruction = unpack(i);
 			System.out.println(instruction); //Borrar
 			if (operators.contains(instruction.get(0))){ //finds if argument is a common operator

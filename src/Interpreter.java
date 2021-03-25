@@ -9,7 +9,8 @@ public class Interpreter {
 	public Interpreter() {
 		conds = new ArrayList<String>(); //Se guardan los nombres de las funciones cond.
 		variables = new ArrayList<String>(); //Se guardan los nombres de las variables.
-		//Los valores booleanos se trabajn como variables.
+		functions = new ArrayList<String>(); //Se guardan los nombres de las funciones definidas por el usuario.
+		//Los valores booleanos se trabajan como variables.
 		variables.add("t");
 		variables.add("T");
 		variables.add("NIL");
@@ -19,7 +20,6 @@ public class Interpreter {
 		variables.add("nIl");
 		variables.add("niL");
 		variables.add("nil");
-		functions = new ArrayList<String>(); //Se guardan los nombres de las funciones definidas por el usuario.
 	}
 	
 	public boolean isFunction(String code) {
@@ -81,6 +81,12 @@ public class Interpreter {
 		}
 	}
 	
+	/**
+	 * Splits parameters
+	 * @param code
+	 * @param word_length
+	 * @return
+	 */
 	public ArrayList<String> separate(String code, int word_length) {
 		//Se quita la palabra de la funcion del string, para retornar solo parametros
 		code = code.substring(word_length, code.length());
@@ -338,7 +344,7 @@ public class Interpreter {
 		return "cond" + conds.size() + "()";
 	}
 	
-	private boolean isReturnCond(String code) {
+	private boolean isReturn(String code) {
 		return true;
 	}
 }
