@@ -69,7 +69,7 @@ public class Interpreter {
 						case "<":  return less(code);
 						case "and": return and(code);
 						case "cond":  return cond(code, 0);
-						default: return operator;
+						default: return translate(operator);
 					}	
 				}
 			} else if (variables.contains(code.toLowerCase().trim())) {
@@ -214,12 +214,24 @@ public class Interpreter {
 		}
 		
 		if(variables.contains(variable_name)) {
-			return "variables.replace(\"" + variable_name + "\", new ReturnValue(" + translate(value) + "))";
+			if(isReturnValue(value)) {
+				return "variables.replace(\"" + variable_name + "\"," + translate(value) + ")";
+			} else if(isReturn(value)) {
+				return "variables.replace(\"" + variable_name + "\", new ReturnValue(" + translate(value) + "))";
+			} else {
+				throw new Exception("Asignacion invalida de la variable " + variable_name + ".");
+			}
 		}
 		
 		variables.add(variable_name);
 		
-		return "variables.put(\"" + variable_name + "\", new ReturnValue(" + translate(value) + "))";
+		if(isReturnValue(value)) {
+			return "variables.put(\"" + variable_name + "\"," + translate(value) + ")";
+		} else if(isReturn(value)) {
+			return "variables.put(\"" + variable_name + "\", new ReturnValue(" + translate(value) + "))";
+		} else {
+			throw new Exception("Asignacion invalida de la variable " + variable_name + ".");
+		}
 	}
 	
 	public String defun(String code) {
@@ -228,26 +240,41 @@ public class Interpreter {
 	
 	public String function(String code) throws Exception {
 		ArrayList<String> parameters = separate(code, 0);
-		String function_name = parameters.get(0);
+		String function_name = parameters.get(0), parameter;
 		String java_syntax = function_name + "(";
 		
 		if(parameters.size() >= 2) {
+			parameter = parameters.get(1);
 			try {
-				java_syntax += translate(parameters.get(1));
+				if(isReturnValue(parameter)) {
+					java_syntax += translate(parameter);
+				} else if (isReturn(parameter)){
+					java_syntax += "new ReturnValue(" + translate(parameter) + ")";
+				} else {
+					throw new Exception("Parametro invalido al llamar a la funcion " + function_name + ".");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
 		}
 		
 		for(int i=2; i<parameters.size(); i++) {
+			parameter = parameters.get(i);
 			try {
-				java_syntax += ", " + translate(parameters.get(i));
+				if(isReturnValue(parameter)) {
+					java_syntax += "," + translate(parameter);
+				} else if (isReturn(parameter)){
+					java_syntax += ", new ReturnValue(" + translate(parameter) + ")";
+				} else {
+					throw new Exception("Parametro invalido al llamar a la funcion " + function_name + ".");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
 		}
 		
-		return java_syntax + ")";
+		java_syntax += ")";
+		return java_syntax;
 	}
 	
 	private String atom(String code) {
@@ -263,7 +290,14 @@ public class Interpreter {
 		if(parameters.size() != 1) {
 			throw new Exception("La funcion 'write' solo puede tener un parametro.");
 		}
-		return "System.out.println(" + translate(parameters.get(0)) + ")";
+		String parameter = parameters.get(0);
+		if(isReturnValue(parameter)) {
+			return "System.out.println(" + translate(parameters.get(0)) + ".toString())";
+		} else if (isReturn(parameter)) {
+			return "System.out.println(" + translate(parameters.get(0)) + ")";
+		} else {
+			throw new Exception("La funcion write debe tener un parametro con retorno para mostrarlo en consola.");
+		}
 	}
 	
 	public String equal(String code) throws Exception {
@@ -272,9 +306,17 @@ public class Interpreter {
 			word_length = 1;
 		}
 		ArrayList<String> parameters = separate(code, word_length);
+		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
-				parameters.set(i, translate(parameters.get(i)));
+				parameter = parameters.get(i);
+				if(isReturnValue(parameter)) {
+					parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+				} else if (isNumeric(parameter)) {
+					parameters.set(i, translate(parameters.get(i)));
+				} else {
+					throw new Exception("Las operaciones comparativas solo pueden ser numericas en Lisp.");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
@@ -293,9 +335,17 @@ public class Interpreter {
 	
 	public String greater(String code) throws Exception {
 		ArrayList<String> parameters = separate(code, 1);
+		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
-				parameters.set(i, translate(parameters.get(i)));
+				parameter = parameters.get(i);
+				if(isReturnValue(parameter)) {
+					parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+				} else if (isNumeric(parameter)) {
+					parameters.set(i, translate(parameters.get(i)));
+				} else {
+					throw new Exception("Las operaciones comparativas solo pueden ser numericas en Lisp.");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
@@ -314,9 +364,17 @@ public class Interpreter {
 	
 	public String less(String code) throws Exception {
 		ArrayList<String> parameters = separate(code, 1);
+		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
-				parameters.set(i, translate(parameters.get(i)));
+				parameter = parameters.get(i);
+				if(isReturnValue(parameter)) {
+					parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+				} else if (isNumeric(parameter)) {
+					parameters.set(i, translate(parameters.get(i)));
+				} else {
+					throw new Exception("Las operaciones comparativas solo pueden ser numericas en Lisp.");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
@@ -335,9 +393,17 @@ public class Interpreter {
 	
 	public String and(String code) throws Exception {
 		ArrayList<String> parameters = separate(code, 3);
+		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
-				parameters.set(i, translate(parameters.get(i)));
+				parameter = parameters.get(i);
+				if(isReturnValue(parameter)) {
+					parameters.set(i, translate(parameters.get(i)) + ".getBoolean()");
+				} else if (isBoolean(parameter)) {
+					parameters.set(i, translate(parameters.get(i)));
+				} else {
+					throw new Exception("Las operaciones logicas deben tener parameteros booleanos.");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
@@ -352,9 +418,17 @@ public class Interpreter {
 	
 	public String or(String code) throws Exception {
 		ArrayList<String> parameters = separate(code, 2);
+		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
-				parameters.set(i, translate(parameters.get(i)));
+				parameter = parameters.get(i);
+				if(isReturnValue(parameter)) {
+					parameters.set(i, translate(parameters.get(i)) + ".getBoolean()");
+				} else if (isBoolean(parameter)) {
+					parameters.set(i, translate(parameters.get(i)));
+				} else {
+					throw new Exception("Las operaciones logicas deben tener parameteros booleanos.");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
@@ -534,7 +608,7 @@ public class Interpreter {
 		}
 	
 		operator = code.split(" ")[0].split("\\(")[0].toLowerCase();
-		//Se verifica si es uno de los tres metodos que nunca tienen retorno.
+		//Se verifica si es uno de los dos metodos que nunca tienen retorno.
 		if(operator.equals("setq") || operator.equals("write")) {
 			return false;
 		//Si es una funcion definida por el usuaurio, se verifica si esta tiene retorno.
@@ -554,7 +628,6 @@ public class Interpreter {
 	
 	public boolean isReturnValue(String code) {
 		if(code.charAt(0) == '\'') {
-			code = code.substring(2, code.length()-1);
 			return false;
 		} else if (code.charAt(0) == '('){
 			code = code.substring(1, code.length()-1);
@@ -562,9 +635,9 @@ public class Interpreter {
 			if (functions.containsKey(operator) || operator.equals("cond")) {
 				return true;
 			} else {
-				return false;
+				return isReturnValue(operator);
 			}
-		} else if (variables.contains(code)) {
+		} else if (variables.contains(code.toLowerCase().trim())) {
 			return true;
 		} else {
 			try {
@@ -572,6 +645,47 @@ public class Interpreter {
 			} catch (Exception e) {
 				return true;
 			}
+			return false;
+		}
+	}
+	
+	private boolean isNumeric(String code) {
+		if(code.charAt(0) == '\'') {
+			return false;
+		} else if (code.charAt(0) == '('){
+			code = code.substring(1, code.length()-1);
+			String operator = code.split(" ")[0].split("\\(")[0].toLowerCase();
+			if (operator.equals("+") || operator.equals("-") || operator.equals("*") || operator.equals("/")) {
+				return true;
+			} else if (operator.equals("add") || operator.equals("subtract") || operator.equals("multiply") || operator.equals("divide")) {
+				return true;
+			} else {
+				return isNumeric(operator);
+			}
+		} else {
+			try {
+				Double d = Double.parseDouble(code);
+			} catch (Exception e) {
+				return false;
+			}
+			return true;
+		}
+	}
+	
+	private boolean isBoolean(String code) {
+		if(code.charAt(0) == '\'') {
+			return false;
+		} else if (code.charAt(0) == '('){
+			code = code.substring(1, code.length()-1);
+			String operator = code.split(" ")[0].split("\\(")[0].toLowerCase();
+			if (operator.equals("equals") || operator.equals("=") || operator.equals(">") || operator.equals("<")) {
+				return true;
+			} else if (operator.equals("and") || operator.equals("or")) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
 			return false;
 		}
 	}
