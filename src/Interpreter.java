@@ -13,13 +13,6 @@ public class Interpreter {
 		functions = new Hashtable<>(); //Se guardan los nombres de las funciones definidas, y si tienen retorno o no.
 		//Los valores booleanos se trabajan como variables.
 		variables.add("t");
-		variables.add("T");
-		variables.add("NIL");
-		variables.add("NIl");
-		variables.add("NiL");
-		variables.add("nIL");
-		variables.add("nIl");
-		variables.add("niL");
 		variables.add("nil");
 	}
 	
@@ -30,13 +23,6 @@ public class Interpreter {
 		functions.put(function_name, true);
 		//Los valores booleanos se trabajan como variables.
 		variables.add("t");
-		variables.add("T");
-		variables.add("NIL");
-		variables.add("NIl");
-		variables.add("NiL");
-		variables.add("nIL");
-		variables.add("nIl");
-		variables.add("niL");
 		variables.add("nil");
 	}
 	
@@ -81,17 +67,18 @@ public class Interpreter {
 						case "=": return equal(code);
 						case ">":  return greater(code);
 						case "<":  return less(code);
+						case "and": return and(code);
 						case "cond":  return cond(code, 0);
 						default: return operator;
 					}	
 				}
-			} else if (variables.contains(code)) {
-				return "variables.get("+ code + ")";
+			} else if (variables.contains(code.toLowerCase().trim())) {
+				return "variables.get(\""+ code.toLowerCase().trim() + "\")";
 			} else {
 				try {
 					Double d = Double.parseDouble(code);
 				} catch (Exception e) {
-					throw new Exception("La variable '" + code + "' no esta definida.");
+					throw new Exception("La variable '" + code.toLowerCase().trim() + "' no esta definida.");
 				}
 				return code + "d";
 			}
@@ -215,7 +202,7 @@ public class Interpreter {
 			throw new Exception("La definicion de variables con 'setq' requiere unicamente de dos parametros");
 		}
 		
-		String variable_name = parameters.get(0).toLowerCase();
+		String variable_name = parameters.get(0).toLowerCase().trim();
 		String value = parameters.get(1);
 		
 		if(variable_name != variable_name.split(" ")[0].split("\\(")[0].toLowerCase()) {
@@ -227,12 +214,12 @@ public class Interpreter {
 		}
 		
 		if(variables.contains(variable_name)) {
-			return "variables.replace(" + variable_name + ", " + translate(value) + ")";
+			return "variables.replace(\"" + variable_name + "\", new ReturnValue(" + translate(value) + "))";
 		}
 		
 		variables.add(variable_name);
 		
-		return "variables.put(" + variable_name + ", new ReturnValue(" + translate(value) + "))";
+		return "variables.put(\"" + variable_name + "\", new ReturnValue(" + translate(value) + "))";
 	}
 	
 	public String defun(String code) {
@@ -285,55 +272,98 @@ public class Interpreter {
 			word_length = 1;
 		}
 		ArrayList<String> parameters = separate(code, word_length);
-		for(String parameter : parameters) {
-			if(parameter.charAt(0) == '(') {
-				try {
-					parameter = translate(parameter);
-				} catch (Exception e) {
-					throw e;
-				}
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
 			}
 		}
 		String java_syntax = "(" + parameters.get(0) + " == " + parameters.get(1) + ")";
 		for(int i=2; i<parameters.size(); i++) {
 			java_syntax += " && (" + parameters.get(0) + " == " + parameters.get(i) + ")";
 		}
+		
+		if(parameters.size() > 2) {
+			java_syntax = "(" + java_syntax + ")";
+		}
+		
 		return java_syntax;
 	}
 	
 	public String greater(String code) throws Exception {
 		ArrayList<String> parameters = separate(code, 1);
-		for(String parameter : parameters) {
-			if(parameter.charAt(0) == '(') {
-				try {
-					parameter = translate(parameter);
-				} catch (Exception e) {
-					throw e;
-				}
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
 			}
 		}
 		String java_syntax = "(" + parameters.get(0) + " > " + parameters.get(1) + ")";
 		for(int i=2; i<parameters.size(); i++) {
 			java_syntax += " && (" + parameters.get(0) + " > " + parameters.get(i) + ")";
 		}
+		
+		if(parameters.size() > 2) {
+			java_syntax = "(" + java_syntax + ")";
+		}
+		
 		return java_syntax;
 	}
 	
 	public String less(String code) throws Exception {
 		ArrayList<String> parameters = separate(code, 1);
-		for(String parameter : parameters) {
-			if(parameter.charAt(0) == '(') {
-				try {
-					parameter = translate(parameter);
-				} catch (Exception e) {
-					throw e;
-				}
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
 			}
 		}
 		String java_syntax = "(" + parameters.get(0) + " < " + parameters.get(1) + ")";
 		for(int i=2; i<parameters.size(); i++) {
 			java_syntax += " && (" + parameters.get(0) + " < " + parameters.get(i) + ")";
 		}
+		
+		if(parameters.size() > 2) {
+			java_syntax = "(" + java_syntax + ")";
+		}
+		
+		return java_syntax;
+	}
+	
+	public String and(String code) throws Exception {
+		ArrayList<String> parameters = separate(code, 3);
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
+			}
+		}
+		String java_syntax = "(" + parameters.get(0);
+		for(int i=1; i<parameters.size(); i++) {
+			java_syntax += " && " + parameters.get(i);
+		}
+		java_syntax += ")";
+		return java_syntax;
+	}
+	
+	public String or(String code) throws Exception {
+		ArrayList<String> parameters = separate(code, 2);
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
+			}
+		}
+		String java_syntax = "(" + parameters.get(0);
+		for(int i=1; i<parameters.size(); i++) {
+			java_syntax += " || " + parameters.get(i);
+		}
+		java_syntax += ")";
 		return java_syntax;
 	}
 	
