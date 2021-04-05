@@ -172,20 +172,88 @@ public class Interpreter {
 	//input: add 45 (* 4 5)     setq variable 34.5
 	//output: 45 + (4*5);       double variable = 34.5d;
 	
-	public String add(String code) {
-		return "";
+	public String add(String code) throws Exception {
+		int word_length = 3;
+		if(code.charAt(0) == '+') {
+			word_length = 1;
+		}
+		ArrayList<String> parameters = separate(code, word_length);
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
+			}
+		}
+		String java_syntax = "(" + parameters.get(0);
+		for(int i=1; i<parameters.size(); i++) {
+			java_syntax += " + " + parameters.get(i);
+		}
+		java_syntax += ")";
+		return java_syntax;
 	}
 	
-	private String subtract(String code) {
-		return "";
+	private String subtract(String code) throws Exception {
+		int word_length = 8;
+		if(code.charAt(0) == '-') {
+			word_length = 1;
+		}
+		ArrayList<String> parameters = separate(code, word_length);
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
+			}
+		}
+		String java_syntax = "(" + parameters.get(0);
+		for(int i=1; i<parameters.size(); i++) {
+			java_syntax += " - " + parameters.get(i);
+		}
+		java_syntax += ")";
+		return java_syntax;
 	}
 	
-	private String multiply(String code) {
-		return "";
+	private String multiply(String code) throws Exception {
+		int word_length = 8;
+		if(code.charAt(0) == '*') {
+			word_length = 1;
+		}
+		ArrayList<String> parameters = separate(code, word_length);
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
+			}
+		}
+		String java_syntax = "(" + parameters.get(0);
+		for(int i=1; i<parameters.size(); i++) {
+			java_syntax += " * " + parameters.get(i);
+		}
+		java_syntax += ")";
+		return java_syntax;
 	}
 	
-	private String divide(String code) {
-		return "";
+	private String divide(String code) throws Exception {
+		int word_length = 6;
+		if(code.charAt(0) == '/') {
+			word_length = 1;
+		}
+		ArrayList<String> parameters = separate(code, word_length);
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameters.set(i, translate(parameters.get(i)));
+			} catch (Exception e) {
+				throw e;
+			}
+		}
+		String java_syntax = "(" + parameters.get(0);
+		for(int i=1; i<parameters.size(); i++) {
+			java_syntax += " / " + parameters.get(i);
+		}
+		java_syntax += ")";
+		return java_syntax;
 	}
 	
 	private String quote(String code) {
