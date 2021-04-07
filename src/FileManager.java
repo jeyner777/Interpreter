@@ -38,6 +38,7 @@ public class FileManager {
 		}
 		
 		String lisp_string = lisp.toString();
+		lisp_string = lisp_string.replace("\t", " ");
 		int count1 = 0, count2 = 0;
 		Integer[] range = new Integer[2];
 		ArrayList<Integer[]> ranges = new ArrayList<>();

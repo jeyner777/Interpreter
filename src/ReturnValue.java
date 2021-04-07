@@ -11,7 +11,11 @@ public class ReturnValue {
 	
 	ReturnValue(String str) {
 		this.str = str;
-		dbl = null;
+		try {
+			dbl = Double.parseDouble(str);
+		} catch (Exception e) {
+			dbl = null;
+		}
 		bool = null;
 	}
 	

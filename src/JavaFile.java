@@ -13,19 +13,19 @@ public class JavaFile {
 		if((2d > 3d)) {
 			variables.put("b", new ReturnValue(23d));
 		}
-		else if(variables.get("t").getBoolean()) {
+		else if("1 2 3 ".equals("1 2 3 ")) {
 			variables.put("b", new ReturnValue(24d));
 		}
 
 		System.out.println((1d + cond1().getDouble()));
 		System.out.print("El valor de b es: ");
-		variables.put("b", new ReturnValue(1d));
-		System.out.println(variables.get("b").toString());
+		variables.put("b", new ReturnValue(true));
+		System.out.println("1 2 3 4 6");
 	}
 
 	private static ReturnValue cond1() {
 		if(variables.get("nil").getBoolean()) {
-			System.out.println("hola");
+			System.out.println("prueba");
 			return new ReturnValue(2d);
 		}
 		else if(variables.get("a").getBoolean()) {

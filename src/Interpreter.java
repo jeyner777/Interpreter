@@ -76,8 +76,8 @@ public class Interpreter {
 						case "setq":  return setq(code);
 						case "atom":  return atom(code);
 						case "list":  return list(code);
-						case "equal":  return equal(code);
 						case "=": return equal(code);
+						case "equal":  return equal2(code);
 						case ">":  return greater(code);
 						case "<":  return less(code);
 						case "and": return and(code);
@@ -356,10 +356,12 @@ public class Interpreter {
 		if(parameters.size() >= 2) {
 			parameter = parameters.get(1);
 			try {
-				if(isReturnValue(parameter)) {
-					java_syntax += translate(parameter);
-				} else if (isReturn(parameter)){
-					java_syntax += "new ReturnValue(" + translate(parameter) + ")";
+				if(isReturn(parameter)) {
+					if(isReturnValue(parameter)) {
+						java_syntax += translate(parameter);
+					} else {
+						java_syntax += "new ReturnValue(" + translate(parameter) + ")";
+					}
 				} else {
 					throw new Exception("Parametro invalido al llamar a la funcion " + function_name + ".");
 				}
@@ -371,10 +373,13 @@ public class Interpreter {
 		for(int i=2; i<parameters.size(); i++) {
 			parameter = parameters.get(i);
 			try {
-				if(isReturnValue(parameter)) {
-					java_syntax += "," + translate(parameter);
-				} else if (isReturn(parameter)){
-					java_syntax += ", new ReturnValue(" + translate(parameter) + ")";
+				if(isReturn(parameter)) {
+					if(isReturnValue(parameter)) {
+						java_syntax += "," + translate(parameter);
+					} else {
+						java_syntax += ", new ReturnValue(" + translate(parameter) + ")";
+					}
+					
 				} else {
 					throw new Exception("Parametro invalido al llamar a la funcion " + function_name + ".");
 				}
@@ -479,11 +484,7 @@ public class Interpreter {
 	}
 	
 	public String equal(String code) throws Exception {
-		int word_length = 5;
-		if(code.charAt(0) == '=') {
-			word_length = 1;
-		}
-		ArrayList<String> parameters = separate(code, word_length);
+		ArrayList<String> parameters = separate(code, 1);
 		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
@@ -506,6 +507,45 @@ public class Interpreter {
 		String java_syntax = "(" + parameters.get(0) + " == " + parameters.get(1) + ")";
 		for(int i=2; i<parameters.size(); i++) {
 			java_syntax += " && (" + parameters.get(0) + " == " + parameters.get(i) + ")";
+		}
+		
+		if(parameters.size() > 2) {
+			java_syntax = "(" + java_syntax + ")";
+		}
+		
+		return java_syntax;
+	}
+	
+	public String equal2(String code) throws Exception {
+		ArrayList<String> parameters = separate(code, 5);
+		String parameter;
+		for(int i=0; i<parameters.size(); i++) {
+			try {
+				parameter = parameters.get(i);
+				if(isReturn(parameter)) {
+					if(isReturnValue(parameter)) {
+						parameters.set(i, translate(parameters.get(i)) + ".toString()");
+					} else if (isNumeric(parameter)) {
+						parameters.set(i, "Double.toString(" + translate(parameters.get(i)) + ")");
+					} else if (parameter.charAt(0) == '"'){
+						parameters.set(i, translate(parameters.get(i)));
+					} else {
+						if(translate(parameters.get(i)).charAt(0) == '"') {
+							parameters.set(i, translate(parameters.get(i)));
+						} else {
+							throw new Exception("Las operaciones comparativas solo pueden ser numericas en Lisp.");
+						}
+					}
+				} else {
+					throw new Exception("Las operaciones comparativas en Lisp deben tener parametros con retorno numerico.");
+				}
+			} catch (Exception e) {
+				throw e;
+			}
+		}
+		String java_syntax = parameters.get(0) + ".equals(" + parameters.get(1) + ")";
+		for(int i=2; i<parameters.size(); i++) {
+			java_syntax += " && " + parameters.get(0) + ".equals(" + parameters.get(i) + ")";
 		}
 		
 		if(parameters.size() > 2) {
@@ -912,7 +952,7 @@ public class Interpreter {
 		} else if (code.charAt(0) == '('){
 			code = code.substring(1, code.length()-1);
 			String operator = code.split(" ")[0].split("\\(")[0].toLowerCase();
-			if (operator.equals("equals") || operator.equals("=") || operator.equals(">") || operator.equals("<")) {
+			if (operator.equals("equal") || operator.equals("=") || operator.equals(">") || operator.equals("<")) {
 				return true;
 			} else if (operator.equals("and") || operator.equals("or")) {
 				return true;
