@@ -16,9 +16,9 @@ public class Interpreter {
 		variables.add("nil");
 	}
 	
-	public Interpreter(Hashtable<String, Boolean> functions, String function_name) {
-		conds = new ArrayList<String>(); //Se guardan los nombres de las funciones cond.
-		variables = new ArrayList<String>(); //Se guardan los nombres de las variables.
+	public Interpreter(ArrayList<String> conds, ArrayList<String> variables, Hashtable<String, Boolean> functions, String function_name) {
+		this.conds = conds; //Se guardan los nombres de las funciones cond.
+		this.variables = variables; //Se guardan los nombres de las variables.
 		this.functions = functions; //Se guardan los nombres de las funciones definidas, y si tienen retorno o no.
 		functions.put(function_name, true);
 		//Los valores booleanos se trabajan como variables.
@@ -381,6 +381,91 @@ public class Interpreter {
 	}
 	
 	public String defun(String code) {
+		ArrayList<String> parts = separate(code, 5);
+		Interpreter reader = new Interpreter(conds, variables, functions, parts.get(0));
+		String tabString = "\t"; // Indentation Style
+		
+		// 1  a 9
+		// llamar a translate si cond, setq write
+		// 10
+		// averiguar y si SI es Return --> translate y cambiar que NO void sino RValue
+		// luego retornar "return ReturnValue(interpreter interno .translate(linea_de_codigo))
+		// si NO es return solo translate
+		
+		//check if is ReturnValue
+		/*
+		String value = parts.get(parts.size()-1); 
+		if(reader.isReturn(value)) {
+			for(int i =0; i < parts.size()-2; i++) {
+				function += reader.translate(parts.get(i));
+			}
+			function += tabString + reader.translate(parts.get(parts.size()-1)) + ";\n" ;
+		} else if(reader.isReturnValue(value)) {
+			for(int i =0; i < parts.size()-2; i++) {
+				function += reader.translate(parts.get(i));
+			}
+			function += tabString + reader.translate(parts.get(parts.size()-1)) + ";\n" ;
+		} else {
+			for(int i =0; i < parts.size()-2; i++) {
+				function += reader.translate(parts.get(i));
+			}
+			function += tabString + reader.translate(parts.get(parts.size()-1)) + ";\n" ;
+		}
+		*/
+		// Start of the function
+		
+		String function = "\n\n" + tabString + "public static ReturnValue "+ parts.get(0).toLowerCase() + "(";
+		parts.remove(0); // removes the name of the function from the ArrayList
+		tabString += "\t";
+		ArrayList<String> arguments = new ArrayList<>();
+		
+		//Check if only one or more parameters on the function
+		if(parts.get(0).length() <= 3 ) {
+			arguments.add(Character.toString(parts.get(0).charAt(1)));
+		} else {
+			arguments = reader.separate(parts.get(0).substring(1, parts.get(0).length()-1),0);
+		}
+		
+		arguments.removeIf(n -> n.equals("&key")); // erases '&key' for Lisp mandatory assign values
+		arguments.removeIf(n -> n.equals("&optional")); // erases '&optional' for Lisp optional values
+		
+		// Writes down parameter values
+		for (String argument: arguments) {
+			function += "ReturnValue " + argument + " ";
+		}
+		function += "){\n";
+		parts.remove(0); // Removes the arguments of the function
+
+		//Determine type of function
+		//1. Es un ReturnValue, una variable o una funcion con retorno.
+		//2. Es un retorno normal, como una suma o resta 
+		//3. No tiene retorno, comp si es un print o un setq
+		
+		
+
+		
+		System.out.println(function);
+
+		// aqui seria de volarme esto
+		/*
+		for(String i: parts) {
+			ArrayList<String> instruction = reader.separate(i.substring(1, i.length()-1),0);
+			System.out.println(instruction); //Borrar
+			if(parts.indexOf(i) < parts.size()-1) {
+				if (operators.contains(instruction.get(0))){ //finds if argument is a common operator
+					function += tabString + reader.translate(i.substring(1, i.length()-1)) + ";\n";
+				} else {
+					function += tabString + reader.translate(i.substring(1, i.length()-1)) + ";\n";
+					;
+				}
+			} else {
+				function += tabString + reader.translate(i.substring(1, i.length()-1)) + ";\n";	
+			}
+		}
+		*/
+		
+		function += "\n" + tabString + "}";
+		System.out.println(function); // borrar
 		return "";
 	}
 	
@@ -999,8 +1084,44 @@ public class Interpreter {
 			return false;
 		}
 	}
-	
+	/**
+	 * 
+	 * @return conds
+	 */
 	public ArrayList<String> getConds() {
 		return conds;
 	}
+	/**
+	 * 
+	 * @return functions
+	 */
+	public Hashtable<String, Boolean> getFunctions(){
+		return functions;
+	}
+	/**
+	 * 
+	 * @return variables
+	 */
+	public ArrayList<String> getVariables(){
+		return variables;
+	}
+	/**
+	 * @param conds the conds to set
+	 */
+	public void setConds(ArrayList<String> conds) {
+		this.conds = conds;
+	}
+	/**
+	 * @param variables the variables to set
+	 */
+	public void setVariables(ArrayList<String> variables) {
+		this.variables = variables;
+	}
+	/**
+	 * @param functions the functions to set
+	 */
+	public void setFunctions(Hashtable<String, Boolean> functions) {
+		this.functions = functions;
+	}
+	
 }
