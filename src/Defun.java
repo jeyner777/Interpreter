@@ -12,6 +12,7 @@ public class Defun {
 				"(if (<= n 0)" + 
 				"1" + 
 				"(* n (fact (1- n))))";
+
 		Interpreter reader = new Interpreter();
 		ArrayList<String> parts = reader.separate(code, 5);
 		System.out.println(parts); // borrar
@@ -63,6 +64,8 @@ public class Defun {
 		//3. No tiene retorno, comp si es un print o un setq
 		
 		String value = parts.get(parts.size()-1);
+		/*
+		 * Aqui van las 3 opciones
 		if(reader.isReturn(value)) {
 			for(int i =0; i < parts.size()-2; i++) {
 				function += reader.translate(parts.get(i));
@@ -79,6 +82,7 @@ public class Defun {
 			}
 			function += tabString + reader.translate(parts.get(parts.size()-1)) + ";\n" ;
 		}
+		*/
 		
 		System.out.println(function);
 
@@ -118,4 +122,7 @@ public class Defun {
 					tabString = tabString.substring(0, tabString.length() - 1);
 				}
 	 */
+	
+	
+	
 }

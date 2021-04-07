@@ -55,7 +55,6 @@ public class Interpreter {
 	public String translate(String code) throws Exception {
 		try {
 			if(code.charAt(0) == '\'') {
-				code = code.substring(2, code.length()-1);
 				return quote(code);
 			} else if (code.charAt(0) == '('){
 				code = code.substring(1, code.length()-1);
@@ -83,6 +82,7 @@ public class Interpreter {
 						case "<":  return less(code);
 						case "and": return and(code);
 						case "cond":  return cond(code, 1);
+						case "quote": return quote(code);
 						default: return translate(operator);
 					}	
 				}
@@ -298,7 +298,16 @@ public class Interpreter {
 	}
 	
 	private String quote(String code) {
-		return "";
+		code = code.toLowerCase();
+		if(code.startsWith("'(quote")) {
+			return "\"" + code.substring(8,code.length()-1) + "\"";
+		} else if (code.startsWith("quote")) {
+			return "\"" + code.substring(6,code.length()) + "\"";
+		} else if (code.startsWith("'")){
+			return "\"" + code.substring(1) + "\"";
+		} else {
+			return "\"" + code + "\"";
+		}
 	}
 	
 	public String setq(String code) throws Exception {
@@ -378,12 +387,61 @@ public class Interpreter {
 		return java_syntax;
 	}
 	
-	private String atom(String code) {
-		return "";
+	private String atom(String code) throws Exception {
+		code = code.toLowerCase();
+		try {
+			if (code.startsWith("atom '")) {
+				code = code.substring(6);
+				if (code.substring(0).equals("()")) {
+					return "true";
+				} else if (code.matches("[0-9]+")) {
+					return "true";
+				} else if (code.matches("[a-zA-z]+")) {
+					return "true";
+				} else if (code.startsWith("(quote ()")) {
+					return "true";
+				} else if (code.startsWith("(quote (")) {
+					return "false";
+				} else if (code.startsWith("(list")) {
+					return "false";
+				} else if (code.startsWith("(")){
+					return "false";
+				} else {
+					return "true";
+				}
+			} else if (code.equals("atom nil")) {
+				return "true";
+			} else if (code.equals("atom t")){
+				return "true";
+			} else if (code.substring(5).matches("[0-9]+")) {
+				return "true";
+			} else if (variables.contains(code.substring(5))) { // variables en el programa
+				return "true";
+			} else if (code.substring(5).equals("()")) {
+				return "true";
+			} else if (code.substring(5).equals("(cons")) {
+				return "false";
+			} else if (code.substring(5).startsWith("(quote '")) {
+				return "false";
+			} else if (code.substring(5).matches("[a-zA-z]+")) {
+				throw new Exception ("Variable no definida en LISP :(");
+			} else {
+				return "true";
+			}
+		} catch (Exception e) {
+			throw e;
+		}
 	}
 	
 	private String list(String code) {
-		return "";
+		code = code.toLowerCase();
+		ArrayList<String> list = separate(code,4);
+		String atomlist = "\"";
+		for(String atom:list) {
+			atomlist += atom + " ";
+		}
+		atomlist += "\"";
+		return atomlist;
 	}
 	
 	private String write(String code) throws Exception {

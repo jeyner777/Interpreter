@@ -5,3 +5,14 @@
 (write "El valor de b es: ")
 (setq b 1)
 (print b)
+(atom 'sss)
+(atom (cons 1 2))
+(atom nil)
+(atom '())
+(atom 3)
+(atom b)
+(quote (+ 1 2))
+'(quote foo)
+'foo
+''foo
+(quote foo)
