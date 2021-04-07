@@ -234,15 +234,27 @@ public class Interpreter {
 		return java_syntax;
 	}
 	
-	private String subtract(String code) throws Exception {
+	public String subtract(String code) throws Exception {
 		int word_length = 8;
 		if(code.charAt(0) == '-') {
 			word_length = 1;
 		}
 		ArrayList<String> parameters = separate(code, word_length);
+		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
-				parameters.set(i, translate(parameters.get(i)));
+				parameter = parameters.get(i);
+				if(isReturn(parameter)) {
+					if(isReturnValue(parameter)) {
+						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+					} else if (isNumeric(parameter)) {
+						parameters.set(i, translate(parameters.get(i)));
+					} else {
+						throw new Exception("Las operaciones aritmeticas solo pueden ser numericas en Lisp.");
+					}
+				} else {
+					throw new Exception("Las operaciones aritmeticas en Lisp deben tener parametros con retorno numerico.");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
@@ -255,15 +267,27 @@ public class Interpreter {
 		return java_syntax;
 	}
 	
-	private String multiply(String code) throws Exception {
+	public String multiply(String code) throws Exception {
 		int word_length = 8;
 		if(code.charAt(0) == '*') {
 			word_length = 1;
 		}
 		ArrayList<String> parameters = separate(code, word_length);
+		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
-				parameters.set(i, translate(parameters.get(i)));
+				parameter = parameters.get(i);
+				if(isReturn(parameter)) {
+					if(isReturnValue(parameter)) {
+						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+					} else if (isNumeric(parameter)) {
+						parameters.set(i, translate(parameters.get(i)));
+					} else {
+						throw new Exception("Las operaciones aritmeticas solo pueden ser numericas en Lisp.");
+					}
+				} else {
+					throw new Exception("Las operaciones aritmeticas en Lisp deben tener parametros con retorno numerico.");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
@@ -276,15 +300,27 @@ public class Interpreter {
 		return java_syntax;
 	}
 	
-	private String divide(String code) throws Exception {
+	public String divide(String code) throws Exception {
 		int word_length = 6;
 		if(code.charAt(0) == '/') {
 			word_length = 1;
 		}
 		ArrayList<String> parameters = separate(code, word_length);
+		String parameter;
 		for(int i=0; i<parameters.size(); i++) {
 			try {
-				parameters.set(i, translate(parameters.get(i)));
+				parameter = parameters.get(i);
+				if(isReturn(parameter)) {
+					if(isReturnValue(parameter)) {
+						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+					} else if (isNumeric(parameter)) {
+						parameters.set(i, translate(parameters.get(i)));
+					} else {
+						throw new Exception("Las operaciones aritmeticas solo pueden ser numericas en Lisp.");
+					}
+				} else {
+					throw new Exception("Las operaciones aritmeticas en Lisp deben tener parametros con retorno numerico.");
+				}
 			} catch (Exception e) {
 				throw e;
 			}
