@@ -11,6 +11,7 @@ public class Main {
 			file_manager.writeFile(java_syntax);
 			file_manager.compileRunProgram();
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
 	}

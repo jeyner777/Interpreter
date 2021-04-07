@@ -4,6 +4,12 @@ import java.util.Hashtable;
 public class JavaFile {
 	private static Hashtable<String, ReturnValue> variables = new Hashtable<>();
 
+
+	public static ReturnValue igual(ReturnValue x, ReturnValue y){
+
+		return new ReturnValue(x.toString().equals(y.toString()));
+	}
+
 	public static void main(String[] args) {
 
 		variables.put("t", new ReturnValue(true));
@@ -20,7 +26,7 @@ public class JavaFile {
 		System.out.println((1d + cond1().getDouble()));
 		System.out.print("El valor de b es: ");
 		variables.put("b", new ReturnValue(true));
-		System.out.println("1 2 3 4 6");
+		System.out.println(igual(new ReturnValue("2s"), new ReturnValue("2s")).toString());
 	}
 
 	private static ReturnValue cond1() {

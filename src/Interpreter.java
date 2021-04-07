@@ -6,6 +6,7 @@ public class Interpreter {
 	private ArrayList<String> conds;
 	private ArrayList<String> variables;
 	private Hashtable<String, Boolean> functions;
+	private ArrayList<String> arguments;
 	
 	public Interpreter() {
 		conds = new ArrayList<String>(); //Se guardan los nombres de las funciones cond.
@@ -14,12 +15,15 @@ public class Interpreter {
 		//Los valores booleanos se trabajan como variables.
 		variables.add("t");
 		variables.add("nil");
+		arguments = new ArrayList<String>();
 	}
 	
-	public Interpreter(ArrayList<String> conds, ArrayList<String> variables, Hashtable<String, Boolean> functions, String function_name) {
+	public Interpreter(ArrayList<String> conds, ArrayList<String> variables, Hashtable<String, Boolean> functions, 
+			ArrayList<String> arguments, String function_name) {
 		this.conds = conds; //Se guardan los nombres de las funciones cond.
 		this.variables = variables; //Se guardan los nombres de las variables.
 		this.functions = functions; //Se guardan los nombres de las funciones definidas, y si tienen retorno o no.
+		this.arguments = arguments;
 		functions.put(function_name, true);
 		//Los valores booleanos se trabajan como variables.
 		variables.add("t");
@@ -81,11 +85,14 @@ public class Interpreter {
 						case ">":  return greater(code);
 						case "<":  return less(code);
 						case "and": return and(code);
+						case "or": return or(code);
 						case "cond":  return cond(code, 1);
 						case "quote": return quote(code);
 						default: return translate(operator);
 					}	
 				}
+			} else if (arguments.contains(code)) {
+				return code;
 			} else if (variables.contains(code.toLowerCase().trim())) {
 				return "variables.get(\""+ code.toLowerCase().trim() + "\")";
 			} else if (code.trim().charAt(0) == '"' && code.trim().charAt(code.trim().length()-1) == '"') {
@@ -216,6 +223,9 @@ public class Interpreter {
 						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
+					} else if (arguments.contains(parameter)) {
+						System.out.println(parameter);
+						parameters.set(i, parameter + ".getDouble()");
 					} else {
 						throw new Exception("Las operaciones aritmeticas solo pueden ser numericas en Lisp.");
 					}
@@ -249,6 +259,9 @@ public class Interpreter {
 						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
+					} else if (arguments.contains(parameter)) {
+						System.out.println(parameter);
+						parameters.set(i, parameter + ".getDouble()");
 					} else {
 						throw new Exception("Las operaciones aritmeticas solo pueden ser numericas en Lisp.");
 					}
@@ -282,6 +295,9 @@ public class Interpreter {
 						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
+					} else if (arguments.contains(parameter)) {
+						System.out.println(parameter);
+						parameters.set(i, parameter + ".getDouble()");
 					} else {
 						throw new Exception("Las operaciones aritmeticas solo pueden ser numericas en Lisp.");
 					}
@@ -315,6 +331,9 @@ public class Interpreter {
 						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
+					} else if (arguments.contains(parameter)) {
+						System.out.println(parameter);
+						parameters.set(i, parameter + ".getDouble()");
 					} else {
 						throw new Exception("Las operaciones aritmeticas solo pueden ser numericas en Lisp.");
 					}
@@ -380,9 +399,9 @@ public class Interpreter {
 		}
 	}
 	
-	public String defun(String code) {
+	public String defun(String code) throws Exception {
+		code = code.substring(1, code.length()-1);
 		ArrayList<String> parts = separate(code, 5);
-		Interpreter reader = new Interpreter(conds, variables, functions, parts.get(0));
 		String tabString = "\t"; // Indentation Style
 		
 		// 1  a 9
@@ -393,47 +412,46 @@ public class Interpreter {
 		// si NO es return solo translate
 		
 		//check if is ReturnValue
-		/*
-		String value = parts.get(parts.size()-1); 
-		if(reader.isReturn(value)) {
-			for(int i =0; i < parts.size()-2; i++) {
-				function += reader.translate(parts.get(i));
-			}
-			function += tabString + reader.translate(parts.get(parts.size()-1)) + ";\n" ;
-		} else if(reader.isReturnValue(value)) {
-			for(int i =0; i < parts.size()-2; i++) {
-				function += reader.translate(parts.get(i));
-			}
-			function += tabString + reader.translate(parts.get(parts.size()-1)) + ";\n" ;
+		String value = parts.get(parts.size()-1), function;
+		boolean is_return = isReturn(value, parts.get(0));
+		boolean is_return_value = isReturnValue(value);
+		if(is_return) {
+			function = "\n\n" + tabString + "public static ReturnValue "+ parts.get(0).toLowerCase() + "(";
 		} else {
-			for(int i =0; i < parts.size()-2; i++) {
-				function += reader.translate(parts.get(i));
-			}
-			function += tabString + reader.translate(parts.get(parts.size()-1)) + ";\n" ;
+			function = "\n\n" + tabString + "public static void "+ parts.get(0).toLowerCase() + "(";
 		}
-		*/
-		// Start of the function
 		
-		String function = "\n\n" + tabString + "public static ReturnValue "+ parts.get(0).toLowerCase() + "(";
+		functions.put(parts.get(0), is_return);
 		parts.remove(0); // removes the name of the function from the ArrayList
+		System.out.println(parts);
 		tabString += "\t";
-		ArrayList<String> arguments = new ArrayList<>();
+		
+		ArrayList<String> arguments = separate(parts.get(0).substring(1, parts.get(0).length()-1), 0);
+		System.out.println(arguments);
 		
 		//Check if only one or more parameters on the function
-		if(parts.get(0).length() <= 3 ) {
+		/*if(parts.get(0).length() <= 3 ) {
 			arguments.add(Character.toString(parts.get(0).charAt(1)));
 		} else {
-			arguments = reader.separate(parts.get(0).substring(1, parts.get(0).length()-1),0);
-		}
+			arguments = separate(parts.get(0).substring(1, parts.get(0).length()-1),0);
+		}*/
 		
 		arguments.removeIf(n -> n.equals("&key")); // erases '&key' for Lisp mandatory assign values
 		arguments.removeIf(n -> n.equals("&optional")); // erases '&optional' for Lisp optional values
 		
 		// Writes down parameter values
-		for (String argument: arguments) {
-			function += "ReturnValue " + argument + " ";
+		
+		function += "ReturnValue " + arguments.get(0);
+		for(int i=1; i<arguments.size(); i++) {
+			function += ", ReturnValue " + arguments.get(i);
 		}
+		
 		function += "){\n";
+		
+		System.out.println(arguments);
+		
+		Interpreter reader = new Interpreter(conds, variables, functions, arguments, parts.get(0));
+		
 		parts.remove(0); // Removes the arguments of the function
 
 		//Determine type of function
@@ -441,10 +459,54 @@ public class Interpreter {
 		//2. Es un retorno normal, como una suma o resta 
 		//3. No tiene retorno, comp si es un print o un setq
 		
+		String part;
+		for(int i=0; i<parts.size()-1; i++) {
+			part = parts.get(i);
+			try {
+				if(reader.isCond(part)) {
+					function += "\n" + reader.cond(part.substring(1, part.length()-1), 2);
+				} else {
+					function += "\n\t\t" + reader.translate(part) + ";";
+				}
+			} catch (Exception e) {
+				throw e;
+			}
+		}
 		
-
+		part = parts.get(parts.size()-1);
+		if(is_return) {
+			if(is_return_value) {
+				try {
+					function += "\n\t\t" + "return " + reader.translate(part) + ";";
+				} catch (Exception e) {
+					throw e;
+				}
+			} else {
+				try {
+					function += "\n\t\t" + "return new ReturnValue(" + reader.translate(part) + ");";
+				} catch (Exception e) {
+					throw e;
+				}
+			}
+		} else {
+			try {
+				if(reader.isCond(part)) {
+					function += "\n" + reader.cond(part.substring(1, part.length()-1), 2);
+				} else {
+					function += "\n\t\t" + reader.translate(part) + ";";
+				}
+			} catch (Exception e) {
+				throw e;
+			}
+		}
 		
-		System.out.println(function);
+		function += "\n\t}\n";
+		
+		setConds(reader.getConds());
+		setVariables(reader.getVariables());
+		setFunctions(reader.getFunctions());
+		return function;
+		//System.out.println(function);
 
 		// aqui seria de volarme esto
 		/*
@@ -464,9 +526,9 @@ public class Interpreter {
 		}
 		*/
 		
-		function += "\n" + tabString + "}";
-		System.out.println(function); // borrar
-		return "";
+		//function += "\n" + tabString + "}";
+		//System.out.println(function); // borrar
+		//return "";
 	}
 	
 	public String function(String code) throws Exception {
@@ -612,10 +674,13 @@ public class Interpreter {
 				parameter = parameters.get(i);
 				if(isReturn(parameter)) {
 					if(isReturnValue(parameter)) {
-						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+						parameters.set(i, translate(parameters.get(i)) + ".getDouble().doubleValue()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
-					} else {
+					} else if(arguments.contains(parameter)) {
+						parameters.set(i, parameter + ".getDouble().doubleValue()");
+					}
+					else {
 						throw new Exception("Las operaciones comparativas solo pueden ser numericas en Lisp.");
 					}
 				} else {
@@ -648,6 +713,8 @@ public class Interpreter {
 						parameters.set(i, translate(parameters.get(i)) + ".toString()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, "Double.toString(" + translate(parameters.get(i)) + ")");
+					} else if (arguments.contains(parameter)) {
+						parameters.set(i, translate(parameters.get(i)) + ".toString()");
 					} else if (parameter.charAt(0) == '"'){
 						parameters.set(i, translate(parameters.get(i)));
 					} else {
@@ -684,10 +751,13 @@ public class Interpreter {
 				parameter = parameters.get(i);
 				if(isReturn(parameter)) {
 					if(isReturnValue(parameter)) {
-						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+						parameters.set(i, translate(parameters.get(i)) + ".getDouble().doubleValue()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
-					} else {
+					} else if(arguments.contains(parameter)) {
+						parameters.set(i, parameter + ".getDouble().doubleValue()");
+					}
+					else {
 						throw new Exception("Las operaciones comparativas solo pueden ser numericas en Lisp.");
 					}
 				} else {
@@ -717,10 +787,13 @@ public class Interpreter {
 				parameter = parameters.get(i);
 				if(isReturn(parameter)) {
 					if(isReturnValue(parameter)) {
-						parameters.set(i, translate(parameters.get(i)) + ".getDouble()");
+						parameters.set(i, translate(parameters.get(i)) + ".getDouble().doubleValue()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
-					} else {
+					} else if(arguments.contains(parameter)) {
+						parameters.set(i, parameter + ".getDouble().doubleValue()");
+					}
+					else {
 						throw new Exception("Las operaciones comparativas solo pueden ser numericas en Lisp.");
 					}
 				} else {
@@ -753,6 +826,8 @@ public class Interpreter {
 						parameters.set(i, translate(parameters.get(i)) + ".getBoolean()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
+					} else if (arguments.contains(parameter)) {
+						parameters.set(i, parameter + ".getBoolean()");
 					} else {
 						throw new Exception("Las operaciones logicas solo pueden ser booleanas en Lisp.");
 					}
@@ -782,6 +857,8 @@ public class Interpreter {
 						parameters.set(i, translate(parameters.get(i)) + ".getBoolean()");
 					} else if (isNumeric(parameter)) {
 						parameters.set(i, translate(parameters.get(i)));
+					} else if (arguments.contains(parameter)) {
+						parameters.set(i, parameter + ".getBoolean()");
 					} else {
 						throw new Exception("Las operaciones logicas solo pueden ser booleanas en Lisp.");
 					}
@@ -898,7 +975,7 @@ public class Interpreter {
 			//ArrayList<String> test_actions = separate(parameters.get(0).substring(1, parameters.get(0).length()-1), 0);
 			//String test = test_actions.get(0);
 			if(isReturn(test)) {
-				if(isReturnValue(test)) {
+				if(isReturnValue(test) || arguments.contains(test)) {
 					java_syntax = indent + "if(" + translate(test) + ".getBoolean()) {\n";
 				} else if(isBoolean(test)) {
 					java_syntax = indent + "if(" + translate(test) + ") {\n";
@@ -935,7 +1012,7 @@ public class Interpreter {
 				test_actions = separate(parameters.get(i).substring(1, parameters.get(i).length()-1), 0);
 				test = test_actions.get(0);
 				if(isReturn(test)) {
-					if(isReturnValue(test)) {
+					if(isReturnValue(test) || arguments.contains(test)) {
 						java_syntax += indent + "else if(" + translate(test) + ".getBoolean()) {\n";
 					} else if(isBoolean(test)) {
 						java_syntax += indent + "else if(" + translate(test) + ") {\n";
